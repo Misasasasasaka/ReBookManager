@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}管理中心 - 二手书店{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1 class="h2">
+                <i class="bi bi-gear"></i> 管理中心
+            </h1>
+            <div class="btn-group" role="group">
+                <a href="{{ url_for('check_data_integrity') }}" class="btn btn-outline-warning">
+                    <i class="bi bi-search"></i> 检查数据完整性
+                </a>
+                <a href="{{ url_for('fix_data_integrity') }}" class="btn btn-outline-danger" 
+                   onclick="return confirm('确定要修复数据完整性问题吗？这将删除孤立的订单。')">
+                    <i class="bi bi-tools"></i> 修复数据问题
+                </a>
+                <a href="{{ url_for('add_book') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> 添加新书
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 统计信息 -->
+<div class="row mb-4" id="stats-row">
+    <div class="col-md-4">
+        <div class="card stats-card text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">总书籍数</h6>
+                        <h2 id="total-books">{{ books|length }}</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-book-fill display-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">可售书籍</h6>
+                        <h2 id="available-books">{{ books|selectattr('is_sold', 'equalto', False)|list|length }}</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-shop display-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card bg-info text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <h6 class="card-title">已售书籍</h6>
+                        <h2 id="sold-books">{{ books|selectattr('is_sold', 'equalto', True)|list|length }}</h2>
+                    </div>
+                    <div class="align-self-center">
+                        <i class="bi bi-check-circle-fill display-4"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 书籍列表 -->
+{% if books %}
+    <div class="card">
+        <div class="card-header">
+            <h5 class="mb-0">
+                <i class="bi bi-list"></i> 所有书籍
+            </h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>书名</th>
+                            <th>作者</th>
+                            <th>价格</th>
+                            <th>状况</th>
+                            <th>状态</th>
+                            <th>上架时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for book in books %}
+                        <tr class="{% if book.is_sold %}table-secondary{% endif %}">
+                            <td>
+                                <strong>{{ book.title }}</strong>
+                                {% if book.isbn %}
+                                <br><small class="text-muted">ISBN: {{ book.isbn }}</small>
+                                {% endif %}
+                            </td>
+                            <td>{{ book.author }}</td>
+                            <td class="text-success fw-bold">¥{{ "%.2f"|format(book.price) }}</td>
+                            <td>
+                                <span class="badge bg-info">{{ book.condition }}</span>
+                            </td>
+                            <td>
+                                {% if book.is_sold %}
+                                    <span class="badge bg-danger">已售出</span>
+                                    {% if book.date_sold %}
+                                    <br><small class="text-muted">{{ book.date_sold.strftime('%Y-%m-%d') }}</small>
+                                    {% endif %}
+                                {% else %}
+                                    <span class="badge bg-success">可售</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ book.date_added.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{{ url_for('book_details', book_id=book.id) }}" 
+                                       class="btn btn-outline-info btn-sm" title="查看详情">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                    <a href="{{ url_for('edit_book', book_id=book.id) }}" 
+                                       class="btn btn-outline-primary btn-sm" title="编辑">
+                                        <i class="bi bi-pencil"></i>
+                                    </a>
+                                    {% if book.is_sold %}
+                                        <a href="{{ url_for('mark_available', book_id=book.id) }}" 
+                                           class="btn btn-outline-success btn-sm" title="标记为可售">
+                                            <i class="bi bi-arrow-repeat"></i>
+                                        </a>
+                                    {% else %}
+                                        <a href="{{ url_for('mark_sold', book_id=book.id) }}" 
+                                           class="btn btn-outline-warning btn-sm" title="标记为售出">
+                                            <i class="bi bi-check"></i>
+                                        </a>
+                                    {% endif %}
+                                    <a href="{{ url_for('delete_book', book_id=book.id) }}" 
+                                       class="btn btn-outline-danger btn-sm" 
+                                       onclick="return confirm('确定要删除这本书吗？')" title="删除">
+                                        <i class="bi bi-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+{% else %}
+    <div class="text-center py-5">
+        <div class="mb-4">
+            <i class="bi bi-inbox display-1 text-muted"></i>
+        </div>
+        <h3 class="text-muted">还没有添加任何书籍</h3>
+        <p class="text-muted">开始添加你的第一本书吧！</p>
+        <a href="{{ url_for('add_book') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> 添加书籍
+        </a>
+    </div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+// 定期刷新统计数据
+function updateStats() {
+    fetch('/api/stats')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('total-books').textContent = data.total_books;
+            document.getElementById('available-books').textContent = data.available_inventory;
+            document.getElementById('sold-books').textContent = data.sold_inventory;
+        })
+        .catch(error => console.error('Error updating stats:', error));
+}
+
+// 每30秒更新一次统计数据
+setInterval(updateStats, 30000);
+</script>
+{% endblock %} 

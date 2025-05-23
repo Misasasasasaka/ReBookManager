@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+
+{% block title %}管理员登录 - 书店管理系统{% endblock %}
+
+{% block content %}
+<div class="page-header">
+    <div class="container">
+        <div class="text-center">
+            <h1 class="mb-2">
+                <i class="bi bi-shield-lock"></i> 管理员登录
+            </h1>
+            <p class="mb-0 opacity-75">请输入管理员密码以继续</p>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-lg border-0">
+            <div class="card-body p-4">
+                <div class="text-center mb-4">
+                    <div class="bg-primary text-white rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px;">
+                        <i class="bi bi-person-gear fs-3"></i>
+                    </div>
+                    <h3 class="card-title mb-1">管理员入口</h3>
+                    <p class="text-muted small">仅限管理员访问</p>
+                </div>
+                
+                <form method="POST">
+                    <div class="mb-4">
+                        <label for="password" class="form-label fw-semibold">
+                            <i class="bi bi-key"></i> 管理员密码
+                        </label>
+                        <div class="input-group">
+                            <span class="input-group-text">
+                                <i class="bi bi-lock"></i>
+                            </span>
+                            <input type="password" class="form-control" id="password" name="password" 
+                                   placeholder="请输入管理员密码" required autocomplete="current-password">
+                        </div>
+                    </div>
+                    
+                    <div class="d-grid mb-3">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="bi bi-box-arrow-in-right"></i> 登录管理后台
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="text-center">
+                    <a href="{{ url_for('index') }}" class="btn btn-link text-decoration-none">
+                        <i class="bi bi-arrow-left"></i> 返回首页
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="mt-4 text-center">
+            <small class="text-muted">
+                <i class="bi bi-info-circle"></i> 
+                如果您不是管理员，请不要尝试登录此页面
+            </small>
+        </div>
+    </div>
+</div>
+
+{% block scripts %}
+<script>
+    // 自动聚焦密码输入框
+    document.addEventListener('DOMContentLoaded', function() {
+        document.getElementById('password').focus();
+    });
+    
+    // 按Enter键提交表单
+    document.getElementById('password').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            this.form.submit();
+        }
+    });
+</script>
+{% endblock %}
+
+{% endblock %} 

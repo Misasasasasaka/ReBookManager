@@ -1,0 +1,255 @@
+{% extends "base.html" %}
+
+{% block title %}扫描ISBN添加书籍 - 二手书店{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header bg-info text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-upc-scan"></i> 扫描ISBN添加书籍
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="isbn-scanner">
+                    <!-- 手动输入ISBN -->
+                    <div class="mb-4">
+                        <label for="manual-isbn" class="form-label">
+                            <i class="bi bi-keyboard"></i> 手动输入ISBN
+                        </label>
+                        <div class="input-group">
+                            <input type="text" class="form-control" id="manual-isbn" 
+                                   placeholder="请输入13位或10位ISBN号码" maxlength="17">
+                            <button class="btn btn-primary" type="button" onclick="searchByISBN()">
+                                <i class="bi bi-search"></i> 查询
+                            </button>
+                        </div>
+                        <div class="form-text">
+                            支持格式：9787115428028 或 978-7-115-42802-8
+                        </div>
+                    </div>
+
+                    <!-- 分割线 -->
+                    <div class="text-center my-4">
+                        <hr class="w-25 d-inline-block">
+                        <span class="text-muted mx-3">或</span>
+                        <hr class="w-25 d-inline-block">
+                    </div>
+
+                    <!-- 摄像头扫描 -->
+                    <div class="mb-4">
+                        <label class="form-label">
+                            <i class="bi bi-camera"></i> 摄像头扫描条形码
+                        </label>
+                        <div class="camera-container" id="camera-container">
+                            <div class="text-center">
+                                <i class="bi bi-camera display-1 text-muted mb-3"></i>
+                                <p class="text-muted">点击下方按钮开启摄像头扫描</p>
+                                <button class="btn btn-success" onclick="startCamera()">
+                                    <i class="bi bi-camera-video"></i> 开启摄像头
+                                </button>
+                            </div>
+                        </div>
+                        <video id="video" style="display: none;" width="100%" height="300"></video>
+                        <canvas id="canvas" style="display: none;"></canvas>
+                    </div>
+
+                    <!-- 扫描结果 -->
+                    <div id="scan-result" class="alert alert-info" style="display: none;">
+                        <h6><i class="bi bi-info-circle"></i> 扫描结果</h6>
+                        <p id="scanned-isbn" class="mb-0"></p>
+                    </div>
+
+                    <!-- 加载状态 -->
+                    <div id="loading" class="text-center" style="display: none;">
+                        <div class="spinner-border text-primary" role="status">
+                            <span class="visually-hidden">加载中...</span>
+                        </div>
+                        <p class="mt-2">正在获取书籍信息...</p>
+                    </div>
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">
+                    <a href="{{ url_for('admin') }}" class="btn btn-secondary">
+                        <i class="bi bi-arrow-left"></i> 返回管理
+                    </a>
+                    <a href="{{ url_for('add_book') }}" class="btn btn-outline-primary">
+                        <i class="bi bi-plus-circle"></i> 手动添加书籍
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- 使用说明 -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-question-circle"></i> 使用说明
+                </h6>
+                <ul class="mb-0">
+                    <li><strong>手动输入：</strong>在输入框中输入书籍的ISBN号码，支持10位或13位格式</li>
+                    <li><strong>摄像头扫描：</strong>点击"开启摄像头"按钮，将书籍条形码对准摄像头进行扫描</li>
+                    <li><strong>自动获取：</strong>系统会自动从图书数据库获取书籍信息，您可以确认后添加</li>
+                    <li><strong>数据来源：</strong>书籍信息来自<a href="https://openlibrary.org" target="_blank">Open Library</a>数据库</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/quagga@0.12.1/dist/quagga.min.js"></script>
+<script>
+let isScanning = false;
+
+// 手动输入ISBN搜索
+function searchByISBN() {
+    const isbn = document.getElementById('manual-isbn').value.trim().replace(/[-\s]/g, '');
+    
+    if (!isbn) {
+        alert('请输入ISBN号码');
+        return;
+    }
+    
+    if (!/^(978|979)?\d{9}[\dX]$/.test(isbn) && !/^\d{10}$/.test(isbn)) {
+        alert('请输入有效的ISBN号码');
+        return;
+    }
+    
+    fetchBookInfo(isbn);
+}
+
+// 获取书籍信息
+function fetchBookInfo(isbn) {
+    document.getElementById('loading').style.display = 'block';
+    document.getElementById('scan-result').style.display = 'none';
+    
+    fetch(`/api/book_info/${isbn}`)
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('loading').style.display = 'none';
+            
+            if (data.success) {
+                // 显示扫描结果
+                document.getElementById('scanned-isbn').textContent = `找到书籍：${data.data.title}`;
+                document.getElementById('scan-result').style.display = 'block';
+                
+                // 跳转到确认页面
+                const params = new URLSearchParams(data.data);
+                window.location.href = `/confirm_book?${params.toString()}`;
+            } else {
+                alert(`获取书籍信息失败：${data.message}`);
+            }
+        })
+        .catch(error => {
+            document.getElementById('loading').style.display = 'none';
+            console.error('Error:', error);
+            alert('网络错误，请稍后重试');
+        });
+}
+
+// 开启摄像头
+function startCamera() {
+    if (isScanning) {
+        stopCamera();
+        return;
+    }
+
+    const video = document.getElementById('video');
+    const container = document.getElementById('camera-container');
+    
+    // 请求摄像头权限
+    navigator.mediaDevices.getUserMedia({ 
+        video: { 
+            facingMode: 'environment' // 后置摄像头优先
+        } 
+    })
+    .then(stream => {
+        video.srcObject = stream;
+        video.style.display = 'block';
+        container.style.display = 'none';
+        
+        // 初始化条形码扫描
+        Quagga.init({
+            inputStream: {
+                name: "Live",
+                type: "LiveStream",
+                target: video
+            },
+            decoder: {
+                readers: ["ean_reader", "ean_8_reader", "code_128_reader"]
+            }
+        }, function(err) {
+            if (err) {
+                console.log(err);
+                alert('无法启动条形码扫描器');
+                return;
+            }
+            console.log("Initialization finished. Ready to start");
+            Quagga.start();
+            isScanning = true;
+            
+            // 更新按钮文本
+            event.target.innerHTML = '<i class="bi bi-stop-circle"></i> 停止扫描';
+            event.target.className = 'btn btn-danger';
+        });
+        
+        // 监听扫描结果
+        Quagga.onDetected(function(data) {
+            const isbn = data.codeResult.code;
+            console.log('Detected ISBN:', isbn);
+            
+            // 停止扫描
+            stopCamera();
+            
+            // 搜索书籍信息
+            fetchBookInfo(isbn);
+        });
+        
+    })
+    .catch(err => {
+        console.error('Camera error:', err);
+        alert('无法访问摄像头，请检查权限设置');
+    });
+}
+
+// 停止摄像头
+function stopCamera() {
+    if (isScanning) {
+        Quagga.stop();
+        isScanning = false;
+    }
+    
+    const video = document.getElementById('video');
+    const container = document.getElementById('camera-container');
+    
+    if (video.srcObject) {
+        const tracks = video.srcObject.getTracks();
+        tracks.forEach(track => track.stop());
+        video.srcObject = null;
+    }
+    
+    video.style.display = 'none';
+    container.style.display = 'flex';
+    
+    // 重置按钮
+    const button = container.querySelector('button');
+    if (button) {
+        button.innerHTML = '<i class="bi bi-camera-video"></i> 开启摄像头';
+        button.className = 'btn btn-success';
+    }
+}
+
+// 页面卸载时停止摄像头
+window.addEventListener('beforeunload', stopCamera);
+
+// 监听输入框回车事件
+document.getElementById('manual-isbn').addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') {
+        searchByISBN();
+    }
+});
+</script>
+{% endblock %} 

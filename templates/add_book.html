@@ -1,0 +1,149 @@
+{% extends "base.html" %}
+
+{% block title %}添加书籍 - 二手书店{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-plus-circle"></i> 添加新书籍
+                </h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('add_book') }}">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="title" class="form-label">
+                                    <i class="bi bi-book"></i> 书名 <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="title" name="title" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="author" class="form-label">
+                                    <i class="bi bi-person"></i> 作者 <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="author" name="author" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="isbn" class="form-label">
+                                    <i class="bi bi-upc-scan"></i> ISBN
+                                </label>
+                                <input type="text" class="form-control" id="isbn" name="isbn" 
+                                       placeholder="例：9787111234567">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="price" class="form-label">
+                                    <i class="bi bi-currency-yen"></i> 价格 (¥) <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" class="form-control" id="price" name="price" 
+                                       step="0.01" min="0" required>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="quantity" class="form-label">
+                                    <i class="bi bi-box"></i> 库存数量 <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" class="form-control" id="quantity" name="quantity" 
+                                       min="1" value="1" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="condition" class="form-label">
+                            <i class="bi bi-star"></i> 书籍状况 <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="condition" name="condition" required>
+                            <option value="">请选择状况</option>
+                            <option value="全新">全新</option>
+                            <option value="九成新">九成新</option>
+                            <option value="八成新">八成新</option>
+                            <option value="七成新">七成新</option>
+                            <option value="六成新">六成新</option>
+                            <option value="五成新">五成新</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">
+                            <i class="bi bi-text-left"></i> 书籍描述
+                        </label>
+                        <textarea class="form-control" id="description" name="description" rows="4" 
+                                  placeholder="描述书籍的内容、特点或任何其他相关信息..."></textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <a href="{{ url_for('admin') }}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> 返回管理
+                            </a>
+                            <a href="{{ url_for('scan_isbn') }}" class="btn btn-outline-info ms-2">
+                                <i class="bi bi-upc-scan"></i> 扫描ISBN
+                            </a>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-check-circle"></i> 添加书籍
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 提示信息卡片 -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-lightbulb"></i> 添加提示
+                </h6>
+                <ul class="mb-0">
+                    <li>书名和作者是必填项</li>
+                    <li>ISBN可以帮助用户更好地识别书籍</li>
+                    <li>请准确描述书籍状况，这会影响用户的购买决策</li>
+                    <li>详细的描述能让用户更了解书籍内容</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 表单验证
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const price = document.getElementById('price').value;
+        if (price <= 0) {
+            e.preventDefault();
+            alert('价格必须大于0');
+            return false;
+        }
+    });
+
+    // ISBN格式提示
+    const isbnInput = document.getElementById('isbn');
+    isbnInput.addEventListener('blur', function() {
+        const isbn = this.value.trim();
+        if (isbn && !/^[0-9]{10}([0-9]{3})?$/.test(isbn.replace(/-/g, ''))) {
+            this.setCustomValidity('请输入有效的ISBN格式');
+        } else {
+            this.setCustomValidity('');
+        }
+    });
+});
+</script>
+{% endblock %} 

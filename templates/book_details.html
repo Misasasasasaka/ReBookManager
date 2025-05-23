@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}{{ book.title }} - 书籍详情{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <!-- 返回按钮 -->
+        <div class="mb-3">
+            <a href="{{ url_for('index') }}" class="btn btn-outline-secondary">
+                <i class="bi bi-arrow-left"></i> 返回书籍列表
+            </a>
+            {% if session.is_admin %}
+            <a href="{{ url_for('admin') }}" class="btn btn-outline-primary ms-2">
+                <i class="bi bi-gear"></i> 管理中心
+            </a>
+            {% endif %}
+        </div>
+
+        <!-- 书籍详情卡片 -->
+        <div class="card shadow-lg">
+            <div class="card-header {% if book.is_sold %}bg-secondary{% else %}bg-primary{% endif %} text-white">
+                <div class="d-flex justify-content-between align-items-center">
+                    <h3 class="mb-0">
+                        <i class="bi bi-book"></i> {{ book.title }}
+                    </h3>
+                    {% if book.is_sold %}
+                        <span class="badge bg-danger fs-6">已售出</span>
+                    {% else %}
+                        <span class="badge bg-success fs-6">可购买</span>
+                    {% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-8">
+                        <!-- 基本信息 -->
+                        <div class="mb-4">
+                            <h5 class="text-primary mb-3">
+                                <i class="bi bi-info-circle"></i> 基本信息
+                            </h5>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="fw-bold" style="width: 100px;">
+                                        <i class="bi bi-person"></i> 作者：
+                                    </td>
+                                    <td>{{ book.author }}</td>
+                                </tr>
+                                {% if book.isbn %}
+                                <tr>
+                                    <td class="fw-bold">
+                                        <i class="bi bi-upc-scan"></i> ISBN：
+                                    </td>
+                                    <td>{{ book.isbn }}</td>
+                                </tr>
+                                {% endif %}
+                                <tr>
+                                    <td class="fw-bold">
+                                        <i class="bi bi-star"></i> 状况：
+                                    </td>
+                                    <td>
+                                        <span class="badge bg-info">{{ book.condition }}</span>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">
+                                        <i class="bi bi-calendar"></i> 上架：
+                                    </td>
+                                    <td>{{ book.date_added.strftime('%Y年%m月%d日 %H:%M') }}</td>
+                                </tr>
+                                {% if book.is_sold and book.date_sold %}
+                                <tr>
+                                    <td class="fw-bold">
+                                        <i class="bi bi-check-circle"></i> 售出：
+                                    </td>
+                                    <td>{{ book.date_sold.strftime('%Y年%m月%d日 %H:%M') }}</td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+
+                        <!-- 描述 -->
+                        {% if book.description %}
+                        <div class="mb-4">
+                            <h5 class="text-primary mb-3">
+                                <i class="bi bi-text-left"></i> 书籍描述
+                            </h5>
+                            <div class="bg-light p-3 rounded">
+                                <p class="mb-0">{{ book.description }}</p>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-md-4">
+                        <!-- 价格和购买信息 -->
+                        <div class="card border-primary">
+                            <div class="card-body text-center">
+                                <div class="display-4 text-success mb-3">
+                                    <i class="bi bi-currency-yen"></i>
+                                    <span class="fw-bold">{{ "%.2f"|format(book.price) }}</span>
+                                </div>
+                                
+                                {% if not book.is_sold %}
+                                    <div class="alert alert-success" role="alert">
+                                        <i class="bi bi-check-circle"></i>
+                                        <strong>此书籍可以购买！</strong>
+                                        <p class="mb-0 mt-2">库存数量：{{ book.available_quantity }}</p>
+                                    </div>
+                                    <a href="{{ url_for('buy_book', book_id=book.id) }}" class="btn btn-primary btn-lg w-100">
+                                        <i class="bi bi-cart-plus"></i> 立即购买
+                                    </a>
+                                {% else %}
+                                    <div class="alert alert-danger" role="alert">
+                                        <i class="bi bi-x-circle"></i>
+                                        <strong>此书籍已售出</strong>
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+
+                        <!-- 管理操作 -->
+                        {% if session.is_admin %}
+                        <div class="card mt-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">
+                                    <i class="bi bi-gear"></i> 管理操作
+                                </h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="d-grid gap-2">
+                                    <a href="{{ url_for('edit_book', book_id=book.id) }}" 
+                                       class="btn btn-outline-primary btn-sm">
+                                        <i class="bi bi-pencil"></i> 编辑信息
+                                    </a>
+                                    {% if book.is_sold %}
+                                        <a href="{{ url_for('mark_available', book_id=book.id) }}" 
+                                           class="btn btn-outline-success btn-sm">
+                                            <i class="bi bi-arrow-repeat"></i> 标记为可售
+                                        </a>
+                                    {% else %}
+                                        <a href="{{ url_for('mark_sold', book_id=book.id) }}" 
+                                           class="btn btn-outline-warning btn-sm">
+                                            <i class="bi bi-check"></i> 标记为售出
+                                        </a>
+                                    {% endif %}
+                                    <a href="{{ url_for('delete_book', book_id=book.id) }}" 
+                                       class="btn btn-outline-danger btn-sm"
+                                       onclick="return confirm('确定要删除这本书吗？')">
+                                        <i class="bi bi-trash"></i> 删除书籍
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 相关推荐（可以后续扩展） -->
+        <div class="card mt-4">
+            <div class="card-body text-center text-muted">
+                <i class="bi bi-lightbulb"></i>
+                <p class="mb-0">提示：您可以在管理中心查看所有书籍的销售情况和库存状态</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function contactSeller() {
+    alert('请通过以下方式联系店主：\n\n📞 电话：139-xxxx-xxxx\n📧 邮箱：bookstore@example.com\n💬 微信：bookstore_wechat\n\n或直接到店咨询！');
+}
+</script>
+{% endblock %} 

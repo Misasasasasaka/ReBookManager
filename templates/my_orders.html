@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+
+{% block title %}我的订单 - 书店管理系统{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <h2>我的订单</h2>
+                <div>
+                    <a href="{{ url_for('index') }}" class="btn btn-outline-primary">
+                        <i class="fas fa-arrow-left"></i> 返回首页
+                    </a>
+                </div>
+            </div>
+
+            {% if current_user %}
+            <div class="alert alert-info">
+                <strong>欢迎，{{ current_user.name }}！</strong>
+                {% if current_user.phone %}
+                    联系电话：{{ current_user.phone }}
+                {% endif %}
+                {% if current_user.qq %}
+                    QQ：{{ current_user.qq }}
+                {% endif %}
+            </div>
+            {% endif %}
+
+            {% if orders %}
+            <div class="row">
+                {% for order in orders %}
+                <div class="col-md-6 mb-4">
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0">订单 #{{ order.id }}</h6>
+                            <span class="badge 
+                                {% if order.status == 'pending' %}bg-warning text-dark
+                                {% elif order.status == 'confirmed' %}bg-info
+                                {% elif order.status == 'completed' %}bg-success
+                                {% elif order.status == 'cancelled' %}bg-danger
+                                {% endif %}">
+                                {% if order.status == 'pending' %}
+                                    待处理
+                                {% elif order.status == 'confirmed' %}
+                                    已确认
+                                {% elif order.status == 'completed' %}
+                                    已完成
+                                {% elif order.status == 'cancelled' %}
+                                    已取消
+                                {% endif %}
+                            </span>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-8">
+                                    <h6 class="card-title">{{ order.book_title }}</h6>
+                                    <p class="card-text text-muted">{{ order.book_author }}</p>
+                                    <p class="mb-1">
+                                        <strong>数量：</strong>{{ order.quantity }}
+                                    </p>
+                                    <p class="mb-1">
+                                        <strong>单价：</strong>¥{{ "%.2f"|format(order.book_price) }}
+                                    </p>
+                                    <p class="mb-1">
+                                        <strong>总价：</strong>¥{{ "%.2f"|format(order.total_price) }}
+                                    </p>
+                                </div>
+                                <div class="col-4 text-end">
+                                    <small class="text-muted">
+                                        {{ order.order_date.strftime('%Y-%m-%d %H:%M') }}
+                                    </small>
+                                </div>
+                            </div>
+                            
+                            {% if order.notes %}
+                            <div class="mt-2">
+                                <small class="text-muted">
+                                    <strong>备注：</strong>{{ order.notes }}
+                                </small>
+                            </div>
+                            {% endif %}
+
+                            <div class="mt-3">
+                                {% if order.status == 'pending' %}
+                                    <small class="text-warning">
+                                        <i class="fas fa-clock"></i> 等待店主确认...
+                                    </small>
+                                {% elif order.status == 'confirmed' %}
+                                    <small class="text-info">
+                                        <i class="fas fa-check-circle"></i> 订单已确认，请等待联系
+                                    </small>
+                                {% elif order.status == 'completed' %}
+                                    <small class="text-success">
+                                        <i class="fas fa-check-double"></i> 交易已完成
+                                    </small>
+                                {% elif order.status == 'cancelled' %}
+                                    <small class="text-danger">
+                                        <i class="fas fa-times-circle"></i> 订单已取消
+                                    </small>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <div class="alert alert-info text-center">
+                <h5>您还没有任何订单</h5>
+                <p>去看看有什么好书吧！</p>
+                <a href="{{ url_for('index') }}" class="btn btn-primary">浏览书籍</a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %} 

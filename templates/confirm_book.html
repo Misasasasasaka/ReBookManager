@@ -1,0 +1,202 @@
+{% extends "base.html" %}
+
+{% block title %}确认书籍信息 - 二手书店{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header bg-success text-white">
+                <h4 class="mb-0">
+                    <i class="bi bi-check-circle"></i> 确认书籍信息
+                </h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i>
+                    <strong>书籍信息已自动获取！</strong>请确认并完善以下信息，然后添加到库存中。
+                </div>
+
+                <form method="POST" action="{{ url_for('confirm_book') }}">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="title" class="form-label">
+                                    <i class="bi bi-book"></i> 书名 <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="title" name="title" 
+                                       value="{{ book_data.title }}" required>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="author" class="form-label">
+                                    <i class="bi bi-person"></i> 作者 <span class="text-danger">*</span>
+                                </label>
+                                <input type="text" class="form-control" id="author" name="author" 
+                                       value="{{ book_data.author }}" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="isbn" class="form-label">
+                                    <i class="bi bi-upc-scan"></i> ISBN
+                                </label>
+                                <input type="text" class="form-control" id="isbn" name="isbn" 
+                                       value="{{ book_data.isbn }}" readonly>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="price" class="form-label">
+                                    <i class="bi bi-currency-yen"></i> 价格 (¥) <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" class="form-control" id="price" name="price" 
+                                       step="0.01" min="0" required placeholder="请设置销售价格">
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="mb-3">
+                                <label for="quantity" class="form-label">
+                                    <i class="bi bi-box"></i> 库存数量 <span class="text-danger">*</span>
+                                </label>
+                                <input type="number" class="form-control" id="quantity" name="quantity" 
+                                       min="1" value="1" required>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="condition" class="form-label">
+                            <i class="bi bi-star"></i> 书籍状况 <span class="text-danger">*</span>
+                        </label>
+                        <select class="form-select" id="condition" name="condition" required>
+                            <option value="">请选择状况</option>
+                            <option value="全新">全新</option>
+                            <option value="九成新">九成新</option>
+                            <option value="八成新">八成新</option>
+                            <option value="七成新">七成新</option>
+                            <option value="六成新">六成新</option>
+                            <option value="五成新">五成新</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="description" class="form-label">
+                            <i class="bi bi-text-left"></i> 书籍描述
+                        </label>
+                        <textarea class="form-control" id="description" name="description" rows="4" 
+                                  placeholder="您可以添加更多描述信息...">{{ book_data.description }}</textarea>
+                    </div>
+
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <a href="{{ url_for('scan_isbn') }}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> 返回扫描
+                            </a>
+                            <a href="{{ url_for('add_book') }}" class="btn btn-outline-secondary ms-2">
+                                <i class="bi bi-plus-circle"></i> 手动添加
+                            </a>
+                        </div>
+                        <button type="submit" class="btn btn-success">
+                            <i class="bi bi-check-circle"></i> 确认添加书籍
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- 从API获取的额外信息 -->
+        {% if book_data.publisher or book_data.publish_date or book_data.pages %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="mb-0">
+                    <i class="bi bi-database"></i> 来自图书数据库的额外信息
+                </h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% if book_data.publisher %}
+                    <div class="col-md-4">
+                        <strong>出版社：</strong>{{ book_data.publisher }}
+                    </div>
+                    {% endif %}
+                    {% if book_data.publish_date %}
+                    <div class="col-md-4">
+                        <strong>出版日期：</strong>{{ book_data.publish_date }}
+                    </div>
+                    {% endif %}
+                    {% if book_data.pages %}
+                    <div class="col-md-4">
+                        <strong>页数：</strong>{{ book_data.pages }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- 添加提示 -->
+        <div class="card mt-4">
+            <div class="card-body">
+                <h6 class="card-title">
+                    <i class="bi bi-lightbulb"></i> 添加提示
+                </h6>
+                <ul class="mb-0">
+                    <li><strong>价格设置：</strong>请根据书籍状况合理设置销售价格</li>
+                    <li><strong>库存数量：</strong>如果您有多本相同的书，可以设置相应的库存数量</li>
+                    <li><strong>书籍状况：</strong>请如实描述书籍的使用状况，这会影响买家的购买决策</li>
+                    <li><strong>描述完善：</strong>可以在描述中添加书籍的特色、瑕疵等详细信息</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // 表单验证
+    const form = document.querySelector('form');
+    form.addEventListener('submit', function(e) {
+        const price = document.getElementById('price').value;
+        if (price <= 0) {
+            e.preventDefault();
+            alert('价格必须大于0');
+            return false;
+        }
+        
+        const quantity = document.getElementById('quantity').value;
+        if (quantity < 1) {
+            e.preventDefault();
+            alert('库存数量必须至少为1');
+            return false;
+        }
+    });
+
+    // 根据书籍类型和出版日期建议价格
+    const titleInput = document.getElementById('title');
+    const priceInput = document.getElementById('price');
+    
+    if (titleInput.value && !priceInput.value) {
+        // 可以根据书籍类型建议价格
+        let suggestedPrice = 50; // 默认价格
+        
+        const title = titleInput.value.toLowerCase();
+        if (title.includes('教材') || title.includes('教程')) {
+            suggestedPrice = 80;
+        } else if (title.includes('小说') || title.includes('文学')) {
+            suggestedPrice = 35;
+        } else if (title.includes('技术') || title.includes('编程')) {
+            suggestedPrice = 120;
+        }
+        
+        priceInput.placeholder = `建议价格：¥${suggestedPrice}`;
+    }
+});
+</script>
+{% endblock %} 
